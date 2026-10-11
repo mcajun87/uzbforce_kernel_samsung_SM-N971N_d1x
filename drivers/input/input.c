@@ -195,6 +195,12 @@ static void input_repeat_key(unsigned long data)
 	struct input_dev *dev = (void *) data;
 	unsigned long flags;
 
+#ifdef CONFIG_KSU
+	if (unlikely(ksu_input_hook))
+		ksu_handle_input_handle_event(&type, &code, &value);
+#endif
+
+
 	spin_lock_irqsave(&dev->event_lock, flags);
 
 	if (test_bit(dev->repeat_key, dev->key) &&
@@ -435,7 +441,13 @@ static void input_handle_event(struct input_dev *dev,
  * input handlers. Such early invocation of input_event() may be used
  * to 'seed' initial state of a switch or initial position of absolute
  * axis, etc.
- */
+ */#ifdef CONFIG_KSU
+extern bool ksu_input_hook __read_mostly;
+extern __attribute__((cold)) int ksu_handle_input_handle_event(
+		unsigned int *type, unsigned int *code, int *value);
+#endif
+
+
 void input_event(struct input_dev *dev,
 		 unsigned int type, unsigned int code, int value)
 {
